@@ -1,0 +1,1 @@
+Wok is a Python module that can be used to download menu data from UW-Madison's NetNutrition website. It has the ability to download most of the information, including the list of dining locations, the different stations at each location, the different schedules at those stations (breakfast/lunch/dinner/late night offerings), and finally the actual menu items.
