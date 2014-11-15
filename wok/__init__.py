@@ -20,11 +20,6 @@ class Wok():
     def __init__(self):
         self.locations = []
 
-    def get_location(self):
-        if not self.locations:
-            raise IndexError('You have not fetched any locations')
-        # TODO: return a location
-
     def fetch_locations(self):
         r = urllib.request.Request(self.url, None, {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8', 'Cookie': 'CBORD.netnutrition2=NNexternalID=1&Layout=; ASP.NET_SessionId=' + COOKIE})
         page = bs4.BeautifulSoup(urllib.request.urlopen(r))
@@ -44,6 +39,17 @@ class Wok():
                 stat.fetch_menus()
                 for menu in stat.menus:
                     menu.fetch_menu()
+
+    def get_location(self, loc):
+        if not self.locations:
+            raise IndexError('You have not fetched any locations')
+        if isinstance(loc, int):
+            for location in self.locations:
+                if location.id == loc:
+                    return location
+            raise IndexError('Location ID not found.')
+        else:
+            raise TypeError('An integer Location ID must be passed.')
 
 
 class Location():
@@ -73,6 +79,17 @@ class Location():
             name = stat.get_text()
             sid = int(re.match(self.re_getid, stat.get('onclick')).group('id'))
             self.stations.append(Station(sid, name))
+
+    def get_station(self, stat):
+        if not self.stations:
+            raise IndexError('You have not fetched any stations')
+        if isinstance(stat, int):
+            for station in self.stations:
+                if station.id == stat:
+                    return station
+            raise IndexError('Locataion ID not found.')
+        else:
+            raise TypeError('An integer Station ID must be passed.')
 
     def __repr__(self):
         return '<Location: %i: %s>' % (self.id, self.name)
@@ -104,6 +121,17 @@ class Station():
             for timeofday in menu.select('tr td a')[1:]:
                 mid = int(re.match(self.re_getid, timeofday.get('onclick')).group('id'))
                 self.menus.append(Menu(mid, datetext, timeofday.get_text()))
+
+    def get_menu(self, menuid):
+        if not self.menus:
+            raise IndexError('No menus found. Did you fetch them?')
+        if isinstance(menuid, int):
+            for menu in self.menus:
+                if menu.id == menuid:
+                    return menu
+            return IndexError('Menu ID not found.')
+        else:
+            raise TypeError('An integer Menu ID must be passed')
 
     def __repr__(self):
         return '<Location: %i: %s>' % (self.id, self.name)
@@ -138,6 +166,8 @@ class Menu():
             price = item.select('td')[-1].get_text()
             serving = item.select('td')[2].get_text()
             self.items.append(Item(iid, name, serving, price))
+
+    fetch_items = fetch_menu  # interface consistency
 
     def __repr__(self):
         return '<Menu: %i: %s: %s>' % (self.id, self.datetext, self.timeofday)

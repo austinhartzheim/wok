@@ -6,7 +6,7 @@ setup(
     name='Wok',
     author='Austin Hartzheim',
 
-    version='1.1.0',
+    version='1.2.0',
     packages=['wok'],
     license='GNU GPL v3',
     description='Download menus from UW-Madison\'s NetNutrition website.',
