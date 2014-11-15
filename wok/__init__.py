@@ -36,6 +36,15 @@ class Wok():
             lid = int(re.match(self.re_getid, loc.get('onclick')).group('id'))
             self.locations.append(Location(lid, name))
 
+    def fetch_recursively(self):
+        self.fetch_locations()
+        for loc in self.locations:
+            loc.fetch_stations()
+            for stat in loc.stations:
+                stat.fetch_menus()
+                for menu in stat.menus:
+                    menu.fetch_menu()
+
 
 class Location():
 
