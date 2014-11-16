@@ -115,7 +115,7 @@ class Station():
                 page = bs4.BeautifulSoup(panel['html'])
                 break
 
-        menus = page.select('.cbo_nn_menuCell table')
+        menus = page.select('.cbo_nn_menuCell > table')
         for menu in menus:
             datetext = menu.select('tr td')[0].get_text()
             for timeofday in menu.select('tr td a')[1:]:
