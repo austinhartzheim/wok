@@ -118,7 +118,7 @@ class Station():
         menus = page.select('.cbo_nn_menuCell > table')
         for menu in menus:
             datetext = menu.select('tr td')[0].get_text()
-            for timeofday in menu.select('tr td a')[1:]:
+            for timeofday in menu.select('.cbo_nn_menuLink'):
                 mid = int(re.match(self.re_getid, timeofday.get('onclick')).group('id'))
                 self.menus.append(Menu(mid, datetext, timeofday.get_text()))
 
@@ -158,7 +158,7 @@ class Menu():
                 page = bs4.BeautifulSoup(panel['html'])
                 break
 
-        items = page.select('.cbo_nn_itemPrimaryRow')
+        items = page.select('.cbo_nn_itemPrimaryRow') + page.select('.cbo_nn_itemAlternateRow')
         for item in items:
             subsel = item.select('.cbo_nn_itemHover')[0]
             name = subsel.get_text()
