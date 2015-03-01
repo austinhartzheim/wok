@@ -66,8 +66,8 @@ class Location():
     def fetch_stations(self):
         postdata = urllib.parse.urlencode({'unitOid': self.id}).encode('utf8')
         r = urllib.request.Request(self.url, postdata, {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8', 'Cookie': 'CBORD.netnutrition2=NNexternalID=1&Layout=; ASP.NET_SessionId=' + COOKIE})
-        page = json.loads(urllib.request.urlopen(r).read().decode('utf8'))
-        for panel in page['panels']:
+        dlpage = json.loads(urllib.request.urlopen(r).read().decode('utf8'))
+        for panel in dlpage['panels']:
             if panel['id'] == 'childUnitsPanel':
                 page = bs4.BeautifulSoup(panel['html'])
                 break
@@ -79,6 +79,24 @@ class Location():
             name = stat.get_text()
             sid = int(re.match(self.re_getid, stat.get('onclick')).group('id'))
             self.stations.append(Station(sid, name))
+
+        # If this location uses a default station, mark that and populate
+        #   a station object.
+        if not self.stations:
+            for panel in dlpage['panels']:
+                if panel['id'] == 'menuPanel':
+                    page = bs4.BeautifulSoup(panel['html'])
+                    break
+
+            station = Station(0, 'Default', dontfetch=True)
+            menus = page.select('.cbo_nn_menuCell > table')
+            for menu in menus:
+                datetext = menu.select('tr td')[0].get_text()
+                for timeofday in menu.select('.cbo_nn_menuLink'):
+                    mid = int(re.match(self.re_getid, timeofday.get('onclick')).group('id'))
+                    station.menus.append(Menu(mid, datetext, timeofday.get_text()))
+
+            self.stations.append(station)
 
     def get_station(self, stat):
         if not self.stations:
@@ -100,13 +118,22 @@ class Station():
     url = 'http://dining.housing.wisc.edu/NetNutrition/1/Unit/SelectUnitFromChildUnitsList'
     re_getid = re.compile('[\D]+(?P<id>\d+)[\D]+')
 
-    def __init__(self, sid, name):
+    def __init__(self, sid, name, dontfetch=False):
+        '''
+        :param bool dontfetch: Instructs the `fetch_menus` method to do
+          nothing because the menu information is already populated.
+          This is used in the case of default stations.
+        '''
         self.id = sid
         self.name = name
+        self.dontfetch = dontfetch
 
         self.menus = []
 
     def fetch_menus(self):
+        if self.dontfetch:
+            return
+
         postdata = urllib.parse.urlencode({'unitOid': self.id}).encode('utf8')
         r = urllib.request.Request(self.url, postdata, {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8', 'Cookie': 'CBORD.netnutrition2=NNexternalID=1&Layout=; ASP.NET_SessionId=' + COOKIE})
         page = json.loads(urllib.request.urlopen(r).read().decode('utf8'))
